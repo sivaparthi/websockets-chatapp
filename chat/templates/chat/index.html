@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Rooms</title>
     <style>
         body {
@@ -20,19 +21,21 @@
             padding: 40px 30px;
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            width: 90%;
             max-width: 400px;
-            width: 100%;
+            box-sizing: border-box;
             text-align: center;
         }
 
         h2 {
             margin-bottom: 30px;
             color: #4a4a4a;
+            font-size: 24px;
         }
 
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             color: #333;
             font-weight: 500;
             text-align: left;
@@ -40,11 +43,12 @@
 
         input[type="text"] {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 20px;
             border-radius: 8px;
             border: 1px solid #ccc;
             font-size: 15px;
+            box-sizing: border-box;
         }
 
         input[type="button"] {
@@ -62,16 +66,44 @@
         input[type="button"]:hover {
             background-color: #5750d3;
         }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            input[type="text"], input[type="button"] {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            h2 {
+                font-size: 18px;
+            }
+
+            input[type="text"], input[type="button"] {
+                font-size: 13px;
+                padding: 9px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Join a Chat Room</h2>
-        <label>Enter your username:</label>
-        <input id="username-input" type="text" size="50">
 
-        <label>What chat room would you like to enter?</label>
-        <input id="room-name-input" type="text" size="100">
+        <label for="username-input">Enter your username:</label>
+        <input id="username-input" type="text" placeholder="e.g., siva">
+
+        <label for="room-name-input">Enter room name:</label>
+        <input id="room-name-input" type="text" placeholder="e.g., general">
 
         <input id="room-name-submit" type="button" value="Enter">
     </div>
@@ -79,21 +111,21 @@
     <script>
         document.querySelector('#username-input').focus();
 
-        document.querySelector('#room-name-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {
-                document.querySelector('#room-name-submit').click();
-            }
-        };
-
         document.querySelector('#username-input').onkeyup = function(e) {
             if (e.key === 'Enter') {
                 document.querySelector('#room-name-input').focus();
             }
         };
 
-        document.querySelector('#room-name-submit').onclick = function(e) {
-            var roomName = document.querySelector('#room-name-input').value.trim();
-            var username = document.querySelector('#username-input').value.trim();
+        document.querySelector('#room-name-input').onkeyup = function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('#room-name-submit').click();
+            }
+        };
+
+        document.querySelector('#room-name-submit').onclick = function() {
+            const roomName = document.querySelector('#room-name-input').value.trim();
+            const username = document.querySelector('#username-input').value.trim();
 
             if (!username || !roomName) {
                 alert('Please enter both a username and a room name.');
