@@ -78,7 +78,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'chatapp',
-        'USER': 'postgres',
+        'USER': 'chatuser',
         'PASSWORD': 'admin',
         'HOST': '172.31.0.1',
         'PORT': '5432',
