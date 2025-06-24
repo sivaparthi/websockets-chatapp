@@ -1,17 +1,80 @@
-<!-- chat/templates/chat/index.html -->
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8"/>
     <title>Chat Rooms</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #d3cce3, #e9e4f0);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 30px;
+            color: #4a4a4a;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        input[type="button"] {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #6c63ff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="button"]:hover {
+            background-color: #5750d3;
+        }
+    </style>
 </head>
 <body>
-    <label>Enter your username:</label><br>
-    <input id="username-input" type="text" size="50"><br><br>
+    <div class="container">
+        <h2>Join a Chat Room</h2>
+        <label>Enter your username:</label>
+        <input id="username-input" type="text" size="50">
 
-    <label>What chat room would you like to enter?</label><br>
-    <input id="room-name-input" type="text" size="100"><br>
-    <input id="room-name-submit" type="button" value="Enter">
+        <label>What chat room would you like to enter?</label>
+        <input id="room-name-input" type="text" size="100">
+
+        <input id="room-name-submit" type="button" value="Enter">
+    </div>
 
     <script>
         document.querySelector('#username-input').focus();
@@ -37,7 +100,6 @@
                 return;
             }
 
-            // Append username as a query parameter
             window.location.href = '/chat/' + roomName + '/?username=' + encodeURIComponent(username);
         };
     </script>
