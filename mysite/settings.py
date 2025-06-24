@@ -80,11 +80,10 @@ DATABASES = {
         'NAME': 'chatapp',
         'USER': 'chatuser',
         'PASSWORD': 'admin',
-        'HOST': '172.31.0.1',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

@@ -11,8 +11,32 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+      - db
+    environment:
+      - DB_NAME=chatapp
+      - DB_USER=chatuser
+      - DB_PASSWORD=admin
+      - DB_HOST=db
+      - DB_PORT=5432
+
   redis:
     image: redis:7
     container_name: redis_server
     ports:
       - "6379:6379"
+
+  db:
+    image: postgres:14
+    container_name: chat_db
+    restart: always
+    environment:
+      POSTGRES_DB: chatapp
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
