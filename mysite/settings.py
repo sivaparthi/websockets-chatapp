@@ -80,7 +80,7 @@ DATABASES = {
         'NAME': 'chatapp',
         'USER': 'chatuser',
         'PASSWORD': 'admin',
-        'HOST': '127.0.0.1',
+        'HOST': '172.31.0.1',
         'PORT': '5432',
     }
 }
