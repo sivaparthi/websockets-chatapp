@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <title>Chat Room</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         :root {
             --primary-color: #6c63ff;
@@ -121,6 +122,22 @@
             text-align: right;
         }
 
+        .system-message {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin: 5px 0;
+        }
+
+                .reply-context {
+            font-size: 12px;
+            color: #666;
+            padding: 4px 8px;
+            background: #eee;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+
         .chat-input-area {
             margin-top: 15px;
             display: flex;
@@ -149,13 +166,6 @@
 
         #chat-message-submit:hover {
             background-color: #574eff;
-        }
-
-        .system-message {
-            text-align: center;
-            font-size: 12px;
-            color: #999;
-            margin: 5px 0;
         }
 
         @media (max-width: 768px) {
@@ -221,7 +231,9 @@
             <ul id="user-list-ul"></ul>
         </div>
         <div class="chat-main">
+            <div id="typing-indicator" class="system-message"></div>
             <div id="chat-log" class="chat-log"></div>
+            <div id="reply-context" class="reply-context"></div>
             <div class="chat-input-area">
                 <input id="chat-message-input" type="text" placeholder="Type a message..." autocomplete="off">
                 <input id="chat-message-submit" type="button" value="Send">
@@ -241,6 +253,30 @@
         const input = document.getElementById('chat-message-input');
         const submit = document.getElementById('chat-message-submit');
         const userListUl = document.getElementById('user-list-ul');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const replyContextDiv = document.getElementById('reply-context');
+
+        let typingTimeout = null;
+        let replyTo = null;
+
+        function setReplyContext(user, msg) {
+            replyTo = { user, msg };
+            replyContextDiv.textContent = `Replying to ${user}: ${msg}`;
+        }
+
+        function clearReplyContext() {
+            replyTo = null;
+            replyContextDiv.textContent = '';
+        }
+
+        function showTyping(user) {
+            if (user === username) return;
+            typingIndicator.textContent = `${user} is typing...`;
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                typingIndicator.textContent = '';
+            }, 3000);
+        }
 
         function getUserColor(name) {
             let hash = 0;
@@ -256,16 +292,41 @@
             return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        function appendBubble(user, msg, timestamp) {
+        function appendBubble(user, msg, timestamp, replyData = null) {
             const bubble = document.createElement('div');
             bubble.classList.add('chat-bubble');
             if (user === username) bubble.classList.add('me');
             bubble.style.backgroundColor = getUserColor(user);
+
+            let replyHtml = '';
+            if (replyData) {
+                replyHtml = `<div style="font-size:11px; color:#555; border-left:2px solid #ccc; padding-left:6px; margin-bottom:4px;">
+                                Reply to ${replyData.user}: ${replyData.msg}
+                             </div>`;
+            }
+
             bubble.innerHTML = `
+                ${replyHtml}
                 <div class="chat-username">${user}</div>
                 <div class="chat-text">${msg}</div>
                 <div class="chat-timestamp">${formatTime(timestamp)}</div>
             `;
+
+            bubble.addEventListener('click', () => {
+                setReplyContext(user, msg);
+            });
+
+            let startX = 0;
+            bubble.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+            });
+            bubble.addEventListener('touchend', e => {
+                const endX = e.changedTouches[0].clientX;
+                if (startX - endX > 30) {  // Swipe left
+                    setReplyContext(user, msg);
+                }
+            });
+
             chatLog.appendChild(bubble);
             chatLog.scrollTop = chatLog.scrollHeight;
         }
@@ -291,7 +352,6 @@
                 });
         }
 
-        // Load past messages with timestamps
         fetch(`/chat/messages/${roomName}/`)
             .then(res => res.json())
             .then(data => {
@@ -310,7 +370,8 @@
             const data = JSON.parse(e.data);
 
             if (data.type === 'chat') {
-                appendBubble(data.username, data.message, new Date().toISOString());
+                appendBubble(data.username, data.message, new Date().toISOString(), data.reply_to);
+                typingIndicator.textContent = '';
             }
 
             if (data.type === 'user_update') {
@@ -320,14 +381,31 @@
             if (data.type === 'user_event') {
                 appendSystemMessage(data.event);
             }
+
+            if (data.type === 'typing') {
+                showTyping(data.username);
+            }
         };
 
         chatSocket.onclose = function(e) {
             console.error('Chat socket closed unexpectedly');
         };
 
+        let lastTypingSent = 0;
+
         input.onkeyup = function(e) {
-            if (e.key === 'Enter') submit.click();
+            if (e.key === 'Enter') {
+                submit.click();
+            } else {
+                const now = Date.now();
+                if (now - lastTypingSent > 1000) {
+                    chatSocket.send(JSON.stringify({
+                        message: "__typing__",
+                        username: username
+                    }));
+                    lastTypingSent = now;
+                }
+            }
         };
 
         submit.onclick = function() {
@@ -336,9 +414,11 @@
 
             chatSocket.send(JSON.stringify({
                 message: message,
-                username: username
+                username: username,
+                reply_to: replyTo
             }));
             input.value = '';
+            clearReplyContext();
         };
     });
     </script>

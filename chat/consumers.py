@@ -11,19 +11,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
 
-        # Get username from query string
         query_string = self.scope["query_string"].decode()
         params = parse_qs(query_string)
         self.username = params.get("username", ["Anonymous"])[0]
 
-        # Save user to room
         await self.add_user_to_room(self.room_name, self.username)
 
-        # Join group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        # Broadcast user joined (optional)
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -32,7 +28,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        # Trigger user list update
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -46,7 +41,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         await self.remove_user_from_room(self.room_name, self.username)
 
-        # Broadcast user left message
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -55,7 +49,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        # Trigger user list update
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -67,19 +60,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        message = data["message"]
+        message = data.get("message")
         username = data.get("username", self.username)
+        reply_to = data.get("reply_to")
 
-        # Save the message
+        if message == "__typing__":
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "user_typing",
+                    "username": username
+                }
+            )
+            return
+
         await self.save_message(self.room_name, username, message)
 
-        # Broadcast message to group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 "type": "chat_message",
                 "message": message,
                 "username": username,
+                "reply_to": reply_to
             }
         )
 
@@ -87,7 +90,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "type": "chat",
             "message": event["message"],
-            "username": event["username"]
+            "username": event["username"],
+            "reply_to": event.get("reply_to")
         }))
 
     async def user_list_update(self, event):
@@ -101,6 +105,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "type": "user_event",
             "event": event["event"]
+        }))
+
+    async def user_typing(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "typing",
+            "username": event["username"]
         }))
 
     @sync_to_async
