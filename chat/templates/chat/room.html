@@ -356,7 +356,7 @@
             });
 
         const chatSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/chat/' + roomName + '/?username=' + encodeURIComponent(username)
+            'wss://' + window.location.host + '/ws/chat/' + roomName + '/?username=' + encodeURIComponent(username)
         );
 
         chatSocket.onopen = loadActiveUsers;
