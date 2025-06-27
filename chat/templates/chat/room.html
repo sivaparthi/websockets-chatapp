@@ -250,6 +250,12 @@
         const typingIndicator = document.getElementById('typing-indicator');
         const replyContextDiv = document.getElementById('reply-context');
 
+        input.focus();
+
+        input.addEventListener('blur', () => {
+            input.focus();
+        });
+
         let typingTimeout = null;
         let replyTo = null;
 
