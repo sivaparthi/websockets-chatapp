@@ -15,9 +15,11 @@ def get_messages(request, room_name):
     messages = Message.objects.filter(room_name=room_name).order_by('timestamp')
     return JsonResponse([
         {
+            "id": m.id,
             "username": m.username,
             "message": m.content,
-            "timestamp": m.timestamp.isoformat()
+            "timestamp": m.timestamp.isoformat(),
+            "parent_data": m.parent_data
         } for m in messages
     ], safe=False)
 

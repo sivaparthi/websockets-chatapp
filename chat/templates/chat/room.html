@@ -259,8 +259,8 @@
         let typingTimeout = null;
         let replyTo = null;
 
-        function setReplyContext(user, msg) {
-            replyTo = { user, msg };
+        function setReplyContext(user, msg, id) {
+            replyTo = { user, msg , id};
             replyContextDiv.textContent = `Replying to ${user}: ${msg}`;
         }
 
@@ -292,7 +292,7 @@
             return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        function appendBubble(user, msg, timestamp, replyData = null) {
+        function appendBubble(id, user, msg, timestamp, replyData = null) {
             const bubble = document.createElement('div');
             bubble.classList.add('chat-bubble');
             if (user === username) bubble.classList.add('me');
@@ -313,7 +313,14 @@
             `;
 
             bubble.addEventListener('click', () => {
-                setReplyContext(user, msg);
+                if (bubble.classList.contains('selected-reply')) {
+                    bubble.classList.remove('selected-reply');
+                    clearReplyContext();
+                } else {
+                    document.querySelectorAll('.selected-reply').forEach(el => el.classList.remove('selected-reply'));
+                    bubble.classList.add('selected-reply');
+                    setReplyContext(user, msg, id);
+                }
             });
 
             let startX = 0;
@@ -355,22 +362,23 @@
         fetch(`/chat/messages/${roomName}/`)
             .then(res => res.json())
             .then(data => {
+                console.log(data)
                 data.forEach(entry => {
-                    appendBubble(entry.username, entry.message, entry.timestamp);
+                    appendBubble(entry.id, entry.username, entry.message, entry.timestamp, entry.parent_data);
                 });
             });
 
         const chatSocket = new WebSocket(
-            'wss://' + window.location.host + '/ws/chat/' + roomName + '/?username=' + encodeURIComponent(username)
+            'ws://' + window.location.host + '/ws/chat/' + roomName + '/?username=' + encodeURIComponent(username)
         );
 
         chatSocket.onopen = loadActiveUsers;
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-
+            console.log(data)
             if (data.type === 'chat') {
-                appendBubble(data.username, data.message, new Date().toISOString(), data.reply_to);
+                appendBubble(data.id, data.username, data.message, new Date().toISOString(), data.reply_to);
                 typingIndicator.textContent = '';
             }
 
